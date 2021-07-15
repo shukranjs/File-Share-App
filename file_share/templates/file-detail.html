@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}File Detail{% endblock %}
+
+{% block body%}
+
+<div class="row" id="comments-list">
+  {% for comment in post.comments.all %}
+    <div class="col-md-12 mt-3 mb-3">
+      <p><strong>{{comment.author.username}}</strong>
+        <p>{{comment.content}}</p>
+    </div>
+  {% endfor %}
+</div>
+
+<form action="" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <br><br><br>
+
+      {% for field in form %}
+          <div class="card">
+            <div class="card-body">
+              <pre class="text-success">File  {{ post }}</pre>
+                {{ field }}
+                {% if user_data.username == request.session.user %}
+                    <a href="" class="btn btn-danger" style="float:right;">Edit</a>
+                {% endif %}
+            </div>
+        </div>
+      {% endfor %}    
+    <br><br>
+    <input type="submit" value="Leave Comment" id="leave-comment" class="btn btn-primary">
+  </form>
+
+
+  {% block js %}
+  <script >
+    const commentsSocket = new WebSocket(
+    'ws://' 
+    + window.location.host 
+    + '/posts/' + 
+    "{{post.id}}" + 
+    "/"
+    );
+    
+  commentsConsumer.onmessage = function(e){
+    const data = JSON.parse(e.data);
+    commentsList = document.getElementById('comments-list');
+    commentsList.insertAdjacentHTML(
+      'beforeend',
+      '<div class="col-md-12 mt-3 mb-3">\n' + 
+      '<p><strong>' + data['message']['author'] + '</strong\n'>
+          '<p>' + data['message']['content'] + '</p>\n' + 
+      '</div>'
+    )
+  }
+
+  document.querySelector('#leave-comment').onclick = function (e) {
+    e.preventDefault();
+    const message = document.querySelector('#id_text');
+    const text = message.value;
+    commentsSocket.send(JSON.stringify({ 
+      'text': 'text'
+    }));
+
+    message.value = '';
+  }
+  </script>
+  {% endblock js %}
+{% endblock body %}
